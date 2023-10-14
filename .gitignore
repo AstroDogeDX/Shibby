@@ -16,3 +16,5 @@ Thumbs.db
 .vscode/
 *.tmp
 *.temp
+yt-dlp.exe
+video*
