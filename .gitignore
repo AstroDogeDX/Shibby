@@ -17,4 +17,5 @@ Thumbs.db
 *.tmp
 *.temp
 yt-dlp.exe
-video*
+*.mp3
+*.mp4
