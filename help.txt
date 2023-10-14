@@ -1,0 +1,18 @@
+# Shibby v0.0.2 Commands
+## Audio/Video
+- **!audio** *url*
+ - Grabs video/audio from URL and reuploads as a .mp3
+- **!video** *url*
+ - Grabs video from URL and reuploads as a .mp4
+## Random Numbers
+- **!roll** *x*d*y*
+ - Rolls an x number of y sided dice; e.g. !roll 1d20
+- **!flip**
+ - Flips a coin; heads or tails!
+## Fun
+- **!hello**
+ - Hi!
+- **!goodbot**
+ - Praise the bot!
+- **!badbot**
+ - Scold the bot!
