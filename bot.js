@@ -95,18 +95,20 @@ client.on('messageCreate', async message => {
     }
 
     if (command === '!video') {
-        const url = args[0];
+        let url = args[0];
 
         if (!url) {
             message.reply('Please provide a valid URL.');
             return;
         }
 
+        url = url.split('&')[0];
+
         try {
             const statusMessage = await message.reply('Fetching video details...');
 
             // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --skip-download ${url}`, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');
@@ -117,10 +119,12 @@ client.on('messageCreate', async message => {
                 const title = videoData.title;
                 const uploader = videoData.uploader;
 
-                await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                const videoName = `video-${Date.now()}.mp4`;
+                const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
+                const videoName = `${sanitizedTitle.slice(0, 24)}.mp4`;
 
-                exec(`${YT_DLP_PATH} -o ${videoName} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --merge-output-format mp4 ${url}`, async (err, stdout, stderr) => {
+                await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
+
+                exec(`${YT_DLP_PATH} -o ${videoName} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --no-playlist --merge-output-format mp4 ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (error) {
                         console.error(`exec error: ${error}`);
                         statusMessage.edit('An error occurred while downloading the video.');
@@ -149,21 +153,23 @@ client.on('messageCreate', async message => {
     }
 
     if (command === '!audio') {
-        const url = args[0];
+        let url = args[0];
 
         if (!url) {
             message.reply('Please provide a valid URL.');
             return;
         }
 
+        url = url.split('&')[0];
+
         try {
-            const statusMessage = await message.reply('Fetching video details...');
+            const statusMessage = await message.reply('Fetching URL details...');
 
             // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --skip-download ${url}`, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
-                    statusMessage.edit('An error occurred while fetching video details.');
+                    statusMessage.edit('An error occurred while fetching URL details.');
                     return;
                 }
 
@@ -172,11 +178,11 @@ client.on('messageCreate', async message => {
                 const uploader = videoData.uploader;
 
                 const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const audioName = `${sanitizedTitle}.mp3`;
+                const audioName = `${sanitizedTitle.slice(0, 24)}.mp3`;
 
                 await statusMessage.edit(`Downloading audio from "${title}" by ${uploader}...`);
 
-                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=m4a]/best[ext=mp3]" --audio-format mp3 ${url}`, async (err, stdout, stderr) => {
+                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=m4a]/best[ext=mp3]" --no-playlist --audio-format mp3 ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (err) {
                         console.error(`exec error: ${err}`);
                         statusMessage.edit('An error occurred while downloading the audio.');
