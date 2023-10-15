@@ -1,4 +1,4 @@
-# Shibby v0.0.4
+# Shibby v0.0.5
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
@@ -21,4 +21,9 @@
     - `dd/mm/yyyy` - Day, month, and year (full year or just 2 digits are acceptable).
     - `utc+/-` - Define **your timezone** in UTC (defaults to `UTC-0`).
     - `format` - Choose your desired date format. Defaults to `R` (e.g., "in 3 hours" or "10 minutes ago").
-
+- `!remind <time>` (Optional `<what>`)
+  - Example: `!remind 60m Push Update to Shibby`
+  - Sets a reminder in seconds, minutes or hours (`s`, `m` and `h` respectively)
+  - Current maximum is **24 hours**
+  - Can optionally include what it is you wanted to be reminded about
+    - Please note that reminders are currently only stored in memory and lost when the bot restarts, which right now is VERY OFTEN - so don't actually rely on this!
