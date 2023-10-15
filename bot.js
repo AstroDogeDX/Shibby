@@ -29,8 +29,6 @@ client.once('ready', () => {
 client.on('messageCreate', message => {
     if (!message.content.startsWith('!') || message.author.bot) return;
 
-    console.log("I think I saw a command...");
-
     const args = message.content.split(' ');
     const commandName = args.shift().toLowerCase();
 
