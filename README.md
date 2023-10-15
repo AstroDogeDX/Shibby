@@ -23,7 +23,9 @@
     - `format` - Choose your desired date format. Defaults to `R` (e.g., "in 3 hours" or "10 minutes ago").
 - `!remind <time>` (Optional `<what>`)
   - Example: `!remind 60m Push Update to Shibby`
-  - Sets a reminder in seconds, minutes or hours (`s`, `m` and `h` respectively)
-  - Current maximum is **24 hours**
-  - Can optionally include what it is you wanted to be reminded about
+  - Sets a reminder in seconds, minutes or hours. (`s`, `m` and `h` respectively)
+  - Current maximum is **24 hours**.
+  - `!remind check` will check if you have a reminder and how long remains.
+  - `!remind cancel` will cancel a set reminder if you have one.
+  - Can optionally include what it is you wanted to be reminded about.
     - Please note that reminders are currently only stored in memory and lost when the bot restarts, which right now is VERY OFTEN - so don't actually rely on this!
