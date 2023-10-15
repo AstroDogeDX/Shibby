@@ -1,5 +1,5 @@
-# Shibby v0.0.2 Commands
-## Audio/Video
+# Shibby v0.0.2a Commands
+## Media
 - **!audio** *url*
  - Grabs video/audio from URL and reuploads as a .mp3
 - **!video** *url*
