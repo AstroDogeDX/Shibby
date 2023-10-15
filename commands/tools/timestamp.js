@@ -56,7 +56,7 @@ module.exports = {
         
         const unixTimestamp = Math.floor(dt.getTime() / 1000);
         
-        const output = `Here's your timestamp: \\<t:${unixTimestamp}:${formatModifier}> <t:${unixTimestamp}:${formatModifier}>`;
+        const output = `Here's your timestamp: \`${'<t:' + unixTimestamp + ':' + formatModifier + '>'}\` <t:${unixTimestamp}:${formatModifier}>`;
         message.reply(output);
         
     }
