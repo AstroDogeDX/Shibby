@@ -5,10 +5,12 @@ const YT_DLP_PATH = 'yt-dlp.exe';
 module.exports = {
     name: '!audio',
     execute: async (message, args) => {
+        console.log(`[!audio] Info: User "${message.author.username}" invoked command...`);
         let url = args[0];
 
         if (!url) {
             message.reply('Please provide a valid URL.');
+            console.log(`[!audio] Error: No URL provided, command terminated.`);
             return;
         }
 
@@ -16,12 +18,14 @@ module.exports = {
 
         try {
             const statusMessage = await message.reply('Fetching URL details...');
+            console.log(`[!audio] Info: Fetching URL details...`);
 
             // Get title and uploader using yt-dlp
             exec(`${YT_DLP_PATH} -j --no-playlist --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching URL details.');
+                    console.log(`[!audio] Error: An error occured while fetching URL details. Command terminated.`);
                     return;
                 }
 
@@ -33,26 +37,31 @@ module.exports = {
                 const audioName = `${sanitizedTitle.slice(0, 24)}.mp3`;
 
                 await statusMessage.edit(`Downloading audio from "${title}" by ${uploader}...`);
+                console.log(`[!audio] Info: Downloading audio: ${title} - ${uploader}`);
 
                 exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=m4a]/best[ext=mp3]" --no-playlist --audio-format mp3 ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (err) {
                         console.error(`exec error: ${err}`);
                         statusMessage.edit('An error occurred while downloading the audio.');
+                        console.log(`[!audio] Error: An error occured while downloading the audio. Command terminated.`);
                         return;
                     }
 
                     await statusMessage.edit('Uploading audio...');
+                    console.log(`[!audio] Info: Uploading audio...`);
                     message.channel.send({ files: [audioName] })
                         .then(() => {
                             fs.unlinkSync(audioName);  // Delete the audio file after sending it
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
+                            console.log(`[!audio] Success: Successfully completed audio task. Command terminated.`);
                         })
                         .catch(err => {
                             console.error(err);
                             statusMessage.edit('An error occurred while uploading the audio.');
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
+                            console.log(`[!audio] Error: An error occured while uploading the audio. Command terminated.`);
                         });
                 });
             });
