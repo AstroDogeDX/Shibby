@@ -1,6 +1,6 @@
 {
   "name": "shibby",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A private Discord Bot for the InuCast server",
   "main": "bot.js",
   "scripts": {
