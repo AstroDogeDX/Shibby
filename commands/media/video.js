@@ -37,30 +37,30 @@ module.exports = {
                 const videoName = `${sanitizedTitle.slice(0, 24)}.mp4`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                console.log(`[!video] Info: Downloading audio: ${title} - ${uploader}`);
+                console.log(`[!video] Info: Downloading video: ${title} - ${uploader}`);
 
                 exec(`${YT_DLP_PATH} -o ${videoName} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --no-playlist --merge-output-format mp4 ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (error) {
                         console.error(`exec error: ${error}`);
                         statusMessage.edit('An error occurred while downloading the video.');
-                        console.log(`[!video] Error: An error occured while downloading the audio. Command terminated.`);
+                        console.log(`[!video] Error: An error occured while downloading the video. Command terminated.`);
                         return;
                     }
                     await statusMessage.edit('Uploading video...');
-                    console.log(`[!video] Info: Uploading audio...`);
+                    console.log(`[!video] Info: Uploading video...`);
                     message.channel.send({ files: [videoName] })
                         .then(() => {
                             fs.unlinkSync(videoName);  // Delete the video file after sending it
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                            console.log(`[!video] Success: Successfully completed audio task. Command terminated.`);
+                            console.log(`[!video] Success: Successfully completed video task. Command terminated.`);
                         })
                         .catch(err => {
                             console.error(err);
                             statusMessage.edit('An error occurred while uploading the video.');
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                            console.log(`[!video] Error: An error occured while uploading the audio. Command terminated.`);
+                            console.log(`[!video] Error: An error occured while uploading the video. Command terminated.`);
                         });
                 });
             });
