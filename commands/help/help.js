@@ -5,5 +5,6 @@ module.exports = {
     name: '!help',
     execute: (message) => {
         message.author.send(bothelp);
+        message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
     }
 };
