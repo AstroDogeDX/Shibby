@@ -1,7 +1,9 @@
 const Discord = require('discord.js');
 const dotenv = require('dotenv');
+const fs = require('fs');
 
 const getFiles = require('./lib/getFiles.js');
+const clearDir = require('./lib/clearDir.js');
 
 const client = new Discord.Client({
     intents: [
@@ -14,6 +16,12 @@ const client = new Discord.Client({
 dotenv.config();
 
 const TOKEN = process.env.BOT_TOKEN;
+
+if (!fs.existsSync('./temp/')) {
+    fs.mkdirSync('./temp/');
+} else {
+    clearDir('./temp/');
+}
 
 client.commands = new Discord.Collection();
 const commandFiles = getFiles('./commands');
