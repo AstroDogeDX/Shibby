@@ -116,34 +116,46 @@ module.exports = {
                     queues.delete(queue.guildId);
                 }
             });
-        }        
+        }
 
-        exec(`${YT_DLP_PATH} -x --audio-format mp3 -o "${fileName}" ${args[0]}`, async (error) => {           
-            if (error) {
-                console.error(`[!jukebox] Error downloading audio: ${error}`);
-                return message.reply("An error occurred trying to download the audio.");
+        exec(`${YT_DLP_PATH} --dump-json ${args[0]}`, async (error, stdout, stderr) => {
+            if (error || stderr) {
+                console.error(`[!jukebox] Error fetching metadata: ${error || stderr}`);
+                return message.reply("An error occurred trying to fetch the video metadata.");
             }
 
-            const song = {
-                title: args[0], // this is a placeholder, ideally you'd get the actual song title from yt-dlp
-                file: fileName,
-            };
-            if (queue.connection) {
-                queue.songs.push(song);
-                message.reply(`Added ${song.title} to the queue!`);
-                return;
-            } else {
-                queue.connection = joinVoiceChannel({
-                    channelId: voiceChannelId,
-                    guildId: message.guild.id,
-                    adapterCreator: message.guild.voiceAdapterCreator,
-                });
-                queue.connection.subscribe(queue.player);
-                queue.songs.push(song);
-                playSong(queue, queue.songs[0]);
-                message.reply(`Now playing: ${song.title}`);
-            }
+            // Parse the metadata
+            const metadata = JSON.parse(stdout);
+            const songTitle = `${metadata.title} - ${metadata.uploader}`;
 
+            // Now, download the audio
+            exec(`${YT_DLP_PATH} --no-playlist -x --audio-format mp3 -o "${fileName}" ${args[0]}`, async (error) => {
+                if (error) {
+                    console.error(`[!jukebox] Error downloading audio: ${error}`);
+                    return message.reply("An error occurred trying to download the audio.");
+                }
+
+                const song = {
+                    title: songTitle,
+                    file: fileName,
+                };
+                if (queue.connection) {
+                    queue.songs.push(song);
+                    message.reply(`Added ${song.title} to the queue!`);
+                    return;
+                } else {
+                    queue.connection = joinVoiceChannel({
+                        channelId: voiceChannelId,
+                        guildId: message.guild.id,
+                        adapterCreator: message.guild.voiceAdapterCreator,
+                    });
+                    queue.connection.subscribe(queue.player);
+                    queue.songs.push(song);
+                    playSong(queue, queue.songs[0]);
+                    message.reply(`Now playing: ${song.title}`);
+                }
+
+            });
         });
     }
 };
