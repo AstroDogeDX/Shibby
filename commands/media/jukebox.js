@@ -87,7 +87,7 @@ module.exports = {
         }
 
         // Assume args[0] is a URL at this point
-        const fileName = `${message.author.id}_${Date.now()}.mp3`;
+        const fileName = `./temp/juke-${message.author.id}_${Date.now()}.mp3`;
 
         console.log(`[!jukebox] Attempting to download audio from ${args[0]}...`);
 
@@ -118,7 +118,7 @@ module.exports = {
             });
         }        
 
-        exec(`${YT_DLP_PATH} -x --audio-format mp3 -o "${fileName}" ${args[0]}`, async (error) => {
+        exec(`${YT_DLP_PATH} -x --audio-format mp3 -o "${fileName}" ${args[0]}`, async (error) => {           
             if (error) {
                 console.error(`[!jukebox] Error downloading audio: ${error}`);
                 return message.reply("An error occurred trying to download the audio.");
