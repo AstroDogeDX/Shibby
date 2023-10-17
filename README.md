@@ -1,4 +1,4 @@
-# Shibby v0.1.0
+# Shibby v0.1.1
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
@@ -12,6 +12,8 @@
 🎲 **Random Number Commands**
 - `!roll xdy` - Rolls `x` number of `y`-sided dice. (e.g., `!roll 1d20`)
 - `!flip` - Flips a coin. Will it be heads or tails?
+- `!pick this or that` - Picks one thing from a supplied list; type as many options as you want separated by 'or'.
+  - Example: `!pick chocolate cake or fruit candy or strawberry ice cream`
 
 🛠️ **Utility Commands**
 - `!timestamp hh:mm` (Optional: `dd/mm/yyyy` `utc+/-` `format`)
