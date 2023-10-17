@@ -34,7 +34,7 @@ module.exports = {
                 const uploader = videoData.uploader;
 
                 const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const audioName = `${sanitizedTitle.slice(0, 24)}.mp3`;
+                const audioName = `./temp/${sanitizedTitle.slice(0, 24)}.mp3`;
 
                 await statusMessage.edit(`Downloading audio from "${title}" by ${uploader}...`);
                 console.log(`[!audio] Info: Downloading audio: ${title} - ${uploader}`);
