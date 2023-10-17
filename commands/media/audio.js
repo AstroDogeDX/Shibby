@@ -1,6 +1,7 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
+const MAX_AUDIO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB in bytes
 
 module.exports = {
     name: '!audio',
@@ -46,7 +47,13 @@ module.exports = {
                         console.log(`[!audio] Error: An error occured while downloading the audio. Command terminated.`);
                         return;
                     }
-
+                    const audioSize = fs.statSync(audioName).size;
+                    if (audioSize > MAX_AUDIO_SIZE_BYTES) {
+                        statusMessage.edit('The audio is too large to upload to Discord. Please select a shorter audio.');
+                        console.log(`[!audio] Error: Audio is too large to upload. Command terminated.`);
+                        fs.unlinkSync(audioName);  // Delete the audio file since it's too large
+                        return;
+                    }
                     await statusMessage.edit('Uploading audio...');
                     console.log(`[!audio] Info: Uploading audio...`);
                     message.channel.send({ files: [audioName] })
