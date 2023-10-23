@@ -6,12 +6,12 @@ const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB in bytes
 module.exports = {
     name: '!video',
     execute: async (message, args) => {
-        console.log(`[!video] Info: User "${message.author.username}" invoked command...`);
+        console.info(`[!video] Info: User "${message.author.username}" invoked command...`);
         let url = args[0];
 
         if (!url) {
             message.reply('Please provide a valid URL.');
-            console.log(`[!video] Error: No URL provided, command terminated.`);
+            console.error(`[!video] Error: No URL provided, command terminated.`);
             return;
         }
 
@@ -26,36 +26,44 @@ module.exports = {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');
-                    console.log(`[!video] Error: An error occured while fetching URL details. Command terminated.`);
+                    console.error(`[!video] Error: An error occured while fetching URL details. Command terminated.`);
                     return;
                 }
-
-                const videoData = JSON.parse(stdout);
-                const title = videoData.title;
-                const uploader = videoData.uploader;
-
+            
+                let title, uploader;
+                try {
+                    const videoData = JSON.parse(stdout);
+                    title = videoData.title;
+                    uploader = videoData.uploader;
+                } catch (parseError) {
+                    console.error('Error parsing JSON:', parseError);
+                    console.warn(`[!video] Warn: An error occured while parsing JSON, using fallback.`);
+                    title = `${message.author.id}_${Date.now()}`;
+                    uploader = 'Unknown';
+                }
+            
                 const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
                 const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.mp4`;
-
+            
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                console.log(`[!video] Info: Downloading video: ${title} - ${uploader}`);
+                console.info(`[!video] Info: Downloading video: ${title} - ${uploader}`);
 
                 exec(`${YT_DLP_PATH} -o ${videoName} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --no-playlist --merge-output-format mp4 ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (error) {
                         console.error(`exec error: ${error}`);
                         statusMessage.edit('An error occurred while downloading the video.');
-                        console.log(`[!video] Error: An error occured while downloading the video. Command terminated.`);
+                        console.error(`[!video] Error: An error occured while downloading the video. Command terminated.`);
                         return;
                     }
                     const videoSize = fs.statSync(videoName).size;
                     if (videoSize > MAX_VIDEO_SIZE_BYTES) {
                         statusMessage.edit('The video is too large to upload to Discord. Please select a shorter video.');
-                        console.log(`[!video] Error: Video is too large to upload. Command terminated.`);
+                        console.error(`[!video] Error: Video is too large to upload. Command terminated.`);
                         fs.unlinkSync(videoName);  // Delete the video file since it's too large
                         return;
                     }
                     await statusMessage.edit('Uploading video...');
-                    console.log(`[!video] Info: Uploading video...`);
+                    console.info(`[!video] Info: Uploading video...`);
                     message.channel.send({ files: [videoName] })
                         .then(() => {
                             fs.unlinkSync(videoName);  // Delete the video file after sending it
@@ -68,7 +76,7 @@ module.exports = {
                             statusMessage.edit('An error occurred while uploading the video.');
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                            console.log(`[!video] Error: An error occured while uploading the video. Command terminated.`);
+                            console.error(`[!video] Error: An error occured while uploading the video. Command terminated.`);
                         });
                 });
             });
