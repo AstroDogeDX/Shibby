@@ -1,30 +1,21 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB in bytes
+const MAX_VIDEO_SIZE = "50M";
 
-function downloadAndUploadVideo(message, videoName, url, quality, statusMessage) {
-    exec(`${YT_DLP_PATH} -o ${videoName} -f ${quality} --no-playlist --merge-output-format mp4 ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+function downloadAndUploadVideo(message, videoName, url, statusMessage) {
+    // Command to get formats below the MAX_VIDEO_SIZE
+    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" ${url}`;
+
+    exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             statusMessage.edit('An error occurred while downloading the video.');
             return;
         }
 
-        const videoSize = fs.statSync(videoName).size;
-        if (videoSize > MAX_VIDEO_SIZE_BYTES) {
-            if (quality === 'best') { // First attempt with best quality
-                console.info(`[!video] Info: Video too large, trying lower quality...`);
-                // Try to download at a lower quality
-                downloadAndUploadVideo(message, videoName, url, 'worst', statusMessage);
-            } else { // Second attempt with lowest quality
-                statusMessage.edit('The video is too large to upload to Discord, even at lower quality.');
-                console.error(`[!video] Error: Video is too large to upload, even at lower quality.`);
-                fs.unlinkSync(videoName);  // Delete the video file since it's too large
-            }
-            return;
-        }
-
+        // Since we filtered by size during download, we no longer need to check the size here.
+        // Proceed to upload the video.
         await statusMessage.edit('Uploading video...');
         message.channel.send({ files: [videoName] })
             .then(() => {
@@ -62,7 +53,7 @@ module.exports = {
             console.log(`[!video] Info: Fetching URL details...`);
 
             // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');
@@ -74,6 +65,7 @@ module.exports = {
                     videoData = JSON.parse(stdout);
                     title = videoData.title;
                     uploader = videoData.uploader;
+                    ext = videoData.ext;
                 } catch (parseError) {
                     console.error('Error parsing JSON:', parseError);
                     title = `${message.author.id}_${Date.now()}`;
@@ -81,11 +73,11 @@ module.exports = {
                 }
 
                 const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.mp4`;
+                const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.${ext}`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
                 // Start the download and upload process with the highest quality
-                downloadAndUploadVideo(message, videoName, url, 'best[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]', statusMessage);
+                downloadAndUploadVideo(message, videoName, url, statusMessage);
             });
         } catch (error) {
             console.error(error);
