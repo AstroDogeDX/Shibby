@@ -4,7 +4,6 @@ const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
 function downloadAndUploadVideo(message, videoName, url, statusMessage) {
-    // Command to get formats below the MAX_VIDEO_SIZE
     const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" ${url}`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
@@ -14,8 +13,6 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage) {
             return;
         }
 
-        // Since we filtered by size during download, we no longer need to check the size here.
-        // Proceed to upload the video.
         await statusMessage.edit('Uploading video...');
         message.channel.send({ files: [videoName] })
             .then(() => {
@@ -76,7 +73,6 @@ module.exports = {
                 const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.${ext}`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                // Start the download and upload process with the highest quality
                 downloadAndUploadVideo(message, videoName, url, statusMessage);
             });
         } catch (error) {
