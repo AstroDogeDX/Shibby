@@ -4,12 +4,19 @@ const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
 function downloadAndUploadVideo(message, videoName, url, statusMessage) {
-    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" ${url}`;
+    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" --sponsorblock-remove sponsor ${url}`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             statusMessage.edit('An error occurred while downloading the video.');
+            return;
+        }
+
+        if(fs.statSync(videoName).size > 52428800) {
+            console.error('[!video] Error: Video was still too big! (>50MB)');
+            statusMessage.edit('I tried my best but the video was still too big to upload! <:inusad:744694454979395684>');
+            fs.unlinkSync(videoName);
             return;
         }
 
@@ -50,7 +57,7 @@ module.exports = {
             console.log(`[!video] Info: Fetching URL details...`);
 
             // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" --sponsorblock-remove sponsor --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');
