@@ -1,9 +1,12 @@
 const Discord = require('discord.js');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const { exec } = require('child_process');
 
 const getFiles = require('./lib/getFiles.js');
 const clearDir = require('./lib/clearDir.js');
+
+const YT_DLP_PATH = 'yt-dlp.exe';
 
 const client = new Discord.Client({
     intents: [
@@ -16,6 +19,8 @@ const client = new Discord.Client({
 dotenv.config();
 
 const TOKEN = process.env.BOT_TOKEN;
+
+exec(`${YT_DLP_PATH} -U`);
 
 if (!fs.existsSync('./temp/')) {
     fs.mkdirSync('./temp/');
