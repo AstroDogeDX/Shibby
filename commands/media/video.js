@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
-const MAX_VIDEO_SIZE = "50M";
+const MAX_VIDEO_SIZE = "35M";
 
 function downloadAndUploadVideo(message, videoName, url, statusMessage) {
     const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "filesize:${MAX_VIDEO_SIZE}" --sponsorblock-remove sponsor ${url}`;
