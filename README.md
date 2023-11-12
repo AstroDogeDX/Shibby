@@ -1,4 +1,4 @@
-# Shibby v0.1.1
+# Shibby v0.2.0
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
@@ -8,6 +8,7 @@
 📺 **Media Commands**
 - `!audio <url>` - Fetches video/audio from the provided URL and reuploads as a `.mp3`
 - `!video <url>` - Fetches video from the provided URL and reuploads as a `.mp4`
+- `!gif <url>` - Fetches video from the provided URL and converts as an animated `.gif` (max 20 secs)
 
 🎲 **Random Number Commands**
 - `!roll xdy` - Rolls `x` number of `y`-sided dice. (e.g., `!roll 1d20`)
