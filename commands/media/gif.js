@@ -26,7 +26,7 @@ async function downloadAndConvertToGif(message, videoName, url, statusMessage) {
 
             // Convert to GIF
             const gifOutput = videoName.replace(/\.[^/.]+$/, '.gif'); // Replace extension with .gif
-            const convertCommand = `ffmpeg -i ${videoName} -vf "fps=20,scale=480:-1:flags=lanczos" -c:v gif -f gif ${gifOutput}`;
+            const convertCommand = `ffmpeg -i ${videoName} -vf "fps=20,scale=320:-1:flags=lanczos" -c:v gif -f gif ${gifOutput}`;
             exec(convertCommand, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`[!gif] exec error: ${error}`);
