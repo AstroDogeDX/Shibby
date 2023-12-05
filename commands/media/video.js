@@ -4,7 +4,7 @@ const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
 function downloadAndUploadVideo(message, videoName, url, statusMessage) {
-    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --netrc-location ".netrc" --netrc "${url}"`;
+    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --cookies-from-browser firefox "${url}"`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
         if (error) {
@@ -57,7 +57,7 @@ module.exports = {
             console.log(`[!video] Info: Fetching URL details...`);
 
             // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --skip-download --netrc-location ".netrc" --netrc "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --skip-download --cookies-from-browser firefox "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');
