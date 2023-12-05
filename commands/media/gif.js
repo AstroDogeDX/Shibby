@@ -5,7 +5,7 @@ const MAX_VIDEO_DURATION = 20; // 20 seconds
 
 async function downloadAndConvertToGif(message, videoName, url, statusMessage) {
     // Download video
-    const downloadCommand = `${YT_DLP_PATH} -o ${videoName} --no-playlist --merge-output-format mp4 --sponsorblock-remove sponsor,music_offtopic,outro ${url}`;
+    const downloadCommand = `${YT_DLP_PATH} -o ${videoName} --no-playlist --merge-output-format mp4 --sponsorblock-remove sponsor,music_offtopic,outro --netrc-location ".netrc" --netrc "${url}"`;
     exec(downloadCommand, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
@@ -76,7 +76,7 @@ module.exports = {
             console.log(`[!gif] Info: Fetching URL details...`);
 
             // Extract video title for the filename
-            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download ${url}`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download --netrc-location ".netrc" --netrc "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');

@@ -22,7 +22,7 @@ module.exports = {
             console.info(`[!audio] Info: Fetching URL details...`);
 
             // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download --netrc-location ".netrc" --netrc "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     statusMessage.edit('An error occurred while fetching URL details.');
@@ -48,7 +48,7 @@ module.exports = {
                 await statusMessage.edit(`Downloading audio from "${title}" by ${uploader}...`);
                 console.info(`[!audio] Info: Downloading audio: ${title} - ${uploader}`);
 
-                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=m4a]/best[ext=mp3]" --no-playlist --audio-format mp3 "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
+                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=m4a]/best[ext=mp3]" --no-playlist --audio-format mp3 --netrc-location ".netrc" --netrc "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (err) {
                         console.error(`exec error: ${err}`);
                         statusMessage.edit('An error occurred while downloading the audio.');
