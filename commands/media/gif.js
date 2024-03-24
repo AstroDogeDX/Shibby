@@ -4,55 +4,44 @@ const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_DURATION = 20; // 20 seconds
 
 async function downloadAndConvertToGif(message, videoName, url, statusMessage) {
-    // Download video
-    const downloadCommand = `${YT_DLP_PATH} -o ${videoName} --no-playlist --merge-output-format mp4 --sponsorblock-remove sponsor,music_offtopic,outro --cookies-from-browser firefox "${url}"`;
-    exec(downloadCommand, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+    // Download and convert to GIF using yt-dlp
+    const downloadCommand = `${YT_DLP_PATH} -o ${videoName}.mp4 --no-playlist --sponsorblock-remove sponsor,music_offtopic,outro --cookies-from-browser firefox "${url}" && ffmpeg -i ${videoName}.mp4 -vf "fps=30,scale=-1:500:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v gif -f gif ${videoName}.gif`;
+    exec(downloadCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
-            statusMessage.edit('An error occurred while downloading the video.');
+            statusMessage.edit('An error occurred while downloading and converting the video to GIF.');
+            fs.unlinkSync(videoName + '.mp4'); // Delete the original MP4 file
             return;
         }
 
         // Check video duration
-        const durationCheckCommand = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ${videoName}`;
+        const durationCheckCommand = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ${videoName}.mp4`;
         exec(durationCheckCommand, (error, stdout, stderr) => {
             const duration = parseFloat(stdout);
             if (duration > MAX_VIDEO_DURATION) {
                 console.error('[!gif] Error: Video is too long!');
                 statusMessage.edit('The video is too long. Please provide a video less than 20 seconds.');
-                fs.unlinkSync(videoName);
+                fs.unlinkSync(videoName + '.mp4'); // Delete the original MP4 file
                 return;
             }
 
-            // Convert to GIF
-            const gifOutput = videoName.replace(/\.[^/.]+$/, '.gif'); // Replace extension with .gif
-            const convertCommand = `ffmpeg -i ${videoName} -vf "fps=30,scale=-1:500:flags=neighbor" -c:v gif -f gif ${gifOutput}`;
-            exec(convertCommand, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`[!gif] exec error: ${error}`);
-                    statusMessage.edit('An error occurred while converting the video to GIF.');
-                    fs.unlinkSync(videoName);
-                    return;
-                }
-
-                // Send GIF
-                message.channel.send({ files: [gifOutput] })
-                    .then(() => {
-                        fs.unlinkSync(videoName);  // Delete the original video file
-                        fs.unlinkSync(gifOutput);  // Delete the GIF file
-                        statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
-                        message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                        console.log(`[!gif] Success: Successfully converted video to GIF.`);
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        statusMessage.edit('An error occurred while uploading the GIF.');
-                        fs.unlinkSync(videoName); // Ensure the video file is deleted even if upload fails
-                        fs.unlinkSync(gifOutput); // Ensure the GIF file is deleted even if upload fails
-                        statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
-                        message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                    });
-            });
+            // Send GIF
+            message.channel.send({ files: [videoName + '.gif'] })
+                .then(() => {
+                    fs.unlinkSync(videoName + '.mp4');  // Delete the original MP4 file
+                    fs.unlinkSync(videoName + '.gif');  // Delete the GIF file
+                    statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
+                    message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
+                    console.log(`[!gif] Success: Successfully converted video to GIF.`);
+                })
+                .catch(err => {
+                    console.error(err);
+                    statusMessage.edit('An error occurred while uploading the GIF.');
+                    fs.unlinkSync(videoName + '.mp4'); // Ensure the MP4 file is deleted even if upload fails
+                    fs.unlinkSync(videoName + '.gif'); // Ensure the GIF file is deleted even if upload fails
+                    statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
+                    message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
+                });
         });
     });
 }
@@ -94,7 +83,7 @@ module.exports = {
                 }
 
                 const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.mp4`; // Saving as .mp4 for downloading
+                const videoName = `./temp/${sanitizedTitle.slice(0, 24)}`; // Saving as .mp4 for downloading
 
                 await statusMessage.edit(`Downloading and converting video "${title}"...`);
                 downloadAndConvertToGif(message, videoName, url, statusMessage);
