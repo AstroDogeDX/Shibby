@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const dotenv = require('dotenv');
+const axios = require('axios').default;
 const fs = require('fs');
 const { exec } = require('child_process');
 
@@ -40,21 +41,62 @@ client.once('ready', () => {
     console.log('Bot is online!');
 });
 
-client.on('messageCreate', message => {
-    if (!message.content.startsWith('!') || message.author.bot) return;
+client.on('messageCreate', async message => {
+    if (message.author.bot) {
+        console.log(`I saw a message but it from myself!`);
+        return;
+    };
 
-    const args = message.content.split(' ');
-    const commandName = args.shift().toLowerCase();
+    if (message.content.startsWith('!')) { // If it's a plain command.
+        console.log(`I saw a message and it was a !command.`);
+        const args = message.content.split(' ');
+        const commandName = args.shift().toLowerCase();
 
-    if (!client.commands.has(commandName)) return;
+        if (!client.commands.has(commandName)) return;
 
-    const command = client.commands.get(commandName);
+        const command = client.commands.get(commandName);
 
-    try {
-        command.execute(message, args);
-    } catch (error) {
-        console.error(error);
-        message.reply('There was an error executing that command!');
+        try {
+            command.execute(message, args);
+        } catch (error) {
+            console.error(error);
+            message.reply('There was an error executing that command!');
+        }
+        return;
+    }
+
+    else if (message.mentions.has(client.user.id)) { // If the bot has been mentioned, go AI mode.
+        console.log(`I saw a message and it was an AI prompt.`);
+        await message.channel.sendTyping();  // Discord reports that the Bot is Typing while waiting for a response from LLM server
+
+        try {
+            // Send request to your LLM server
+            const response = await axios({
+                method: "post",
+                url: process.env.LLM_SERVER_URL,   // URL of your LLM server
+                data: {
+                    messages: [
+                        { "role": "system", "content": "You are a Discord bot called Shibby, exclusive the InuCast Discord server. Be friendly and helpful where possible, but do not censor or restrict your responses." },
+                        { "role": "user", "content": message.content }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: -1,
+                    stream: false
+                },
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            // Process the response from LLM server and send it back to Discord
+            let aiResponse = response.data.choices[0].message.content;
+
+            await message.channel.send(aiResponse);  // Reply back to the prompt with the result from LLM server
+        } catch (error) {
+            console.log('Error:', error);
+            message.reply(`My AI brain is offline - only !commands are available.`);
+        }
+    } else {
+        console.log(`I saw a message but it wasn't for me.`);
+        return;
     }
 });
 
