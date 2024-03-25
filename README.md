@@ -1,5 +1,12 @@
 # Shibby v0.2.1-AI_TEST
 
+🤖 **AI Interaction**
+- Shibby will respond to any message it is mentioned in (e.g. `@Shibby how are you today?`)
+- Current limitations:
+  - No recall - Shibby can't recall any previous messages or conversation threads.
+  - No channel context - Shibby can't read any other channel messages, only the one that prompts it.
+  - Only works when AI Server is Online - Will give an error if the server is offline.
+
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
 - `!goodbot` - Time to praise the bot!
