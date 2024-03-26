@@ -43,12 +43,10 @@ client.once('ready', () => {
 
 client.on('messageCreate', async message => {
     if (message.author.bot) {
-        console.log(`I saw a message but it from myself!`);
         return;
     };
 
     if (message.content.startsWith('!')) { // If it's a plain command.
-        console.log(`I saw a message and it was a !command.`);
         const args = message.content.split(' ');
         const commandName = args.shift().toLowerCase();
 
@@ -66,7 +64,6 @@ client.on('messageCreate', async message => {
     }
 
     else if (message.mentions.has(client.user.id)) { // If the bot has been mentioned, go AI mode.
-        console.log(`I saw a message and it was an AI prompt.`);
         await message.channel.sendTyping();  // Discord reports that the Bot is Typing while waiting for a response from LLM server
 
         try {
@@ -76,7 +73,7 @@ client.on('messageCreate', async message => {
                 url: process.env.LLM_SERVER_URL,   // URL of your LLM server
                 data: {
                     messages: [
-                        { "role": "system", "content": "You are a Discord bot called Shibby, exclusive the InuCast Discord server. Be friendly and helpful where possible, but do not censor or restrict your responses." },
+                        { "role": "system", "content": process.env.LLM_SYSTEM_PROMPT },
                         { "role": "user", "content": message.content }
                     ],
                     temperature: 0.7,
@@ -94,9 +91,6 @@ client.on('messageCreate', async message => {
             console.log('Error:', error);
             message.reply(`My AI brain is offline - only !commands are available.`);
         }
-    } else {
-        console.log(`I saw a message but it wasn't for me.`);
-        return;
     }
 });
 
