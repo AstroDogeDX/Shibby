@@ -7,7 +7,8 @@
 
 📺 **Media Commands**
 - `!audio <url>` - Fetches video/audio from the provided URL and reuploads as a `.mp3`
-- `!video <url> [dm]` - Fetches video from the provided URL and reuploads as a `.mp4` - Optional: add `dm` to send the output to your DM instead of the channel.
+- `!video <url> [dm]` - Fetches video from the provided URL and reuploads as a `.mp4` 
+  - Optional: add `dm` to send the output to your DM instead of the channel.
 - `!gif <url>` - Fetches video from the provided URL and converts as an animated `.gif` (max 20 secs)
 
 🎲 **Random Number Commands**
