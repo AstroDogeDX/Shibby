@@ -3,7 +3,7 @@ const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
-function downloadAndUploadVideo(message, videoName, url, statusMessage) {
+function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM) {
     const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --cookies-from-browser firefox "${url}"`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
@@ -21,7 +21,14 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage) {
         }
 
         await statusMessage.edit('Uploading video...');
-        message.channel.send({ files: [videoName] })
+        let sendFunction;
+        if (sendToDM) {
+            sendFunction = message.author.send.bind(message.author);
+        } else {
+            sendFunction = message.channel.send.bind(message.channel);
+        }
+
+        sendFunction({ files: [videoName] })
             .then(() => {
                 fs.unlinkSync(videoName);  // Delete the video file after sending it
                 statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
@@ -43,6 +50,7 @@ module.exports = {
     execute: async (message, args) => {
         console.info(`[!video] Info: User "${message.author.username}" invoked command...`);
         let url = args[0];
+        let isDM = args[1] ? true : false;
 
         if (!url) {
             message.reply('Please provide a valid URL.');
@@ -80,7 +88,7 @@ module.exports = {
                 const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.${ext}`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                downloadAndUploadVideo(message, videoName, url, statusMessage);
+                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM);
             });
         } catch (error) {
             console.error(error);
