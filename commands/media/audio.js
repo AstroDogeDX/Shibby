@@ -8,6 +8,7 @@ module.exports = {
     execute: async (message, args) => {
         console.info(`[!audio] Info: User "${message.author.username}" invoked command...`);
         let url = args[0];
+        let isDM = args[1] ? true : false; // New argument to determine if audio should be sent to DM
 
         if (!url) {
             message.reply('Please provide a valid URL.');
@@ -64,7 +65,9 @@ module.exports = {
                     }
                     await statusMessage.edit('Uploading audio...');
                     console.info(`[!audio] Info: Uploading audio...`);
-                    message.channel.send({ files: [audioName] })
+
+                    const sendFunction = isDM ? message.author.send.bind(message.author) : message.channel.send.bind(message.channel); // New part to determine if audio should be sent to DM
+                    sendFunction({ files: [audioName] })
                         .then(() => {
                             fs.unlinkSync(audioName);  // Delete the audio file after sending it
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
