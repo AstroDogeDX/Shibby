@@ -58,6 +58,9 @@ module.exports = {
             return;
         }
 
+        // Replace 'x.com' with 'twitter.com'
+        url = url.replace('x.com', 'twitter.com');
+        
         url = url.split('&')[0]; // Strips out additional URL parameters for simplicity
 
         try {
@@ -72,7 +75,7 @@ module.exports = {
                     return;
                 }
 
-                let videoData, title, uploader;
+                let videoData, title, uploader, ext;
                 try {
                     videoData = JSON.parse(stdout);
                     title = videoData.title;
