@@ -22,11 +22,11 @@ module.exports = {
             isDM = true;
             args = args.filter(arg => arg !== '-dm');
         }
-        
+
         // Process custom message if not sending to DM
         if (!isDM && args.length > 0) {
             customMessage = args.join(' ');
-            
+
             // Handle user mentions
             const mentionRegex = /@(\S+)/g;
             customMessage = await Promise.all(customMessage.split(' ').map(async (word) => {
@@ -101,9 +101,9 @@ module.exports = {
 
                     const sendFunction = isDM ? message.author.send.bind(message.author) : message.channel.send.bind(message.channel);
                     let messageContent = isDM ? undefined : customMessage;
-                    sendFunction({ 
+                    sendFunction({
                         content: messageContent,
-                        files: [audioName] 
+                        files: [audioName]
                     })
                         .then(() => {
                             fs.unlinkSync(audioName);  // Delete the audio file after sending it

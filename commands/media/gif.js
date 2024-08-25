@@ -34,9 +34,9 @@ async function downloadAndConvertToGif(message, videoName, url, statusMessage, s
             }
 
             let messageContent = sendToDM ? undefined : customMessage;
-            sendFunction({ 
+            sendFunction({
                 content: messageContent,
-                files: [videoName + '.gif'] 
+                files: [videoName + '.gif']
             })
                 .then(() => {
                     fs.unlinkSync(videoName + '.mp4');  // Delete the original MP4 file
@@ -76,11 +76,11 @@ module.exports = {
             isDM = true;
             args = args.filter(arg => arg !== '-dm');
         }
-        
+
         // Process custom message if not sending to DM
         if (!isDM && args.length > 0) {
             customMessage = args.join(' ');
-            
+
             // Handle user mentions
             const mentionRegex = /@(\S+)/g;
             customMessage = await Promise.all(customMessage.split(' ').map(async (word) => {

@@ -13,7 +13,7 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM
             return;
         }
 
-        if(fs.statSync(videoName).size > 52428800) {
+        if (fs.statSync(videoName).size > 52428800) {
             console.error('[!video] Error: Video was still too big! (>50MB)');
             statusMessage.edit('I tried my best but the video was still too big to upload! <:inusad:744694454979395684>');
             fs.unlinkSync(videoName);
@@ -29,9 +29,9 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM
         }
 
         let messageContent = sendToDM ? undefined : customMessage;
-        sendFunction({ 
+        sendFunction({
             content: messageContent,
-            files: [videoName] 
+            files: [videoName]
         })
             .then(() => {
                 fs.unlinkSync(videoName);  // Delete the video file after sending it
@@ -68,11 +68,11 @@ module.exports = {
             isDM = true;
             args = args.filter(arg => arg !== '-dm');
         }
-        
+
         // Process custom message if not sending to DM
         if (!isDM && args.length > 0) {
             customMessage = args.join(' ');
-            
+
             // Handle user mentions
             const mentionRegex = /@(\S+)/g;
             customMessage = await Promise.all(customMessage.split(' ').map(async (word) => {
@@ -97,7 +97,7 @@ module.exports = {
 
         // Replace 'x.com' with 'twitter.com'
         url = url.replace('x.com', 'twitter.com');
-        
+
         url = url.split('&')[0]; // Strips out additional URL parameters for simplicity
 
         try {
