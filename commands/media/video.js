@@ -3,7 +3,7 @@ const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
-function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM) {
+function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM, customMessage) {
     const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --cookies-from-browser firefox "${url}"`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
@@ -28,7 +28,11 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM
             sendFunction = message.channel.send.bind(message.channel);
         }
 
-        sendFunction({ files: [videoName] })
+        let messageContent = sendToDM ? undefined : customMessage;
+        sendFunction({ 
+            content: messageContent,
+            files: [videoName] 
+        })
             .then(() => {
                 fs.unlinkSync(videoName);  // Delete the video file after sending it
                 statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
@@ -49,13 +53,46 @@ module.exports = {
     name: '!video',
     execute: async (message, args) => {
         console.info(`[!video] Info: User "${message.author.username}" invoked command...`);
-        let url = args[0];
-        let isDM = args[1] ? true : false;
+        let url = args.shift(); // Remove the first argument (URL) from args
+        let isDM = false;
+        let customMessage = '';
 
         if (!url) {
             message.reply('Please provide a valid URL.');
             console.error(`[!video] Error: No URL provided, command terminated.`);
             return;
+        }
+
+        // Check for '-dm' flag
+        if (args.includes('-dm')) {
+            isDM = true;
+            args = args.filter(arg => arg !== '-dm');
+        }
+        
+        // Process custom message if not sending to DM
+        if (!isDM && args.length > 0) {
+            customMessage = args.join(' ');
+            
+            // Handle user mentions
+            const mentionRegex = /@(\S+)/g;
+            customMessage = await Promise.all(customMessage.split(' ').map(async (word) => {
+                if (mentionRegex.test(word)) {
+                    const username = word.slice(1);
+                    try {
+                        const user = await message.guild.members.fetch({ query: username, limit: 1 });
+                        if (user.first()) {
+                            return `<@${user.first().id}>`;
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching user: ${error}`);
+                    }
+                }
+                return word;
+            }));
+            customMessage = customMessage.join(' ');
+
+            // Sanitize the custom message (excluding user mentions)
+            customMessage = customMessage.replace(/[^a-zA-Z0-9\s<@>]/g, '');
         }
 
         // Replace 'x.com' with 'twitter.com'
@@ -91,7 +128,7 @@ module.exports = {
                 const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.${ext}`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM);
+                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM, customMessage);
             });
         } catch (error) {
             console.error(error);
