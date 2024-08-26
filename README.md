@@ -1,4 +1,4 @@
-# Shibby v0.2.4
+# Shibby v0.3.0
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
@@ -6,11 +6,18 @@
 - `!badbot` - If you need to scold the bot...
 
 📺 **Media Commands**
-- `!audio <url>` - Fetches video/audio from the provided URL and reuploads as a `.mp3`
-  - Optional: add `dm` to send the output to your DM instead of the channel.
-- `!video <url> [dm]` - Fetches video from the provided URL and reuploads as a `.mp4` 
-  - Optional: add `dm` to send the output to your DM instead of the channel.
-- `!gif <url>` - Fetches video from the provided URL and converts as an animated `.gif` (max 20 secs)
+- `!audio <url> [-dm] [additional text]` - Fetches audio from the provided URL and reuploads as a `.ogg` file
+- `!video <url> [-dm] [additional text]` - Fetches video from the provided URL and reuploads as a `.mp4` file
+- `!gif <url> [-dm] [additional text]` - Fetches video from the provided URL and converts to an animated `.gif` (max 20 secs)
+
+  For all media commands:
+  - `-dm`: Optional flag to send the output to your DM instead of the channel
+  - `[additional text]`: Optional text to include with the media (can include mentions)
+  
+  Examples:
+  - `!video https://example.com/video.mp4 Check this out @user!`
+  - `!audio https://example.com/song.mp3 Great song!`
+  - `!gif https://example.com/clip.mp4 -dm Funny moment from the stream`
 
 🎲 **Random Number Commands**
 - `!roll xdy` - Rolls `x` number of `y`-sided dice. (e.g., `!roll 1d20`)
