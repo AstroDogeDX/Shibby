@@ -54,12 +54,12 @@ module.exports = {
                 }
 
                 const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const audioName = `./temp/${sanitizedTitle.slice(0, 24)}.mp3`;
+                const audioName = `./temp/${sanitizedTitle.slice(0, 24)}.ogg`; // Changed extension to .ogg
 
                 await statusMessage.edit(`Downloading audio from "${title}" by ${uploader}...`);
                 console.info(`[!audio] Info: Downloading audio: ${title} - ${uploader}`);
 
-                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=m4a]/best[ext=mp3]" --no-playlist --audio-format mp3 --cookies-from-browser firefox "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
+                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=ogg]/bestaudio/best" --no-playlist --audio-format vorbis --cookies-from-browser firefox "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (err) {
                         console.error(`exec error: ${err}`);
                         statusMessage.edit('An error occurred while downloading the audio.');
