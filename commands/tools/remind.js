@@ -1,7 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+const saveReminders = require('../../lib/saveReminders');
+
 const reminders = new Map();
 
 module.exports = {
     name: '!remind',
+    reminders, // Export reminders map for access in bot.js
     execute: (message, args) => {
         if (args.length === 0) return message.reply("Please specify the time for the reminder.");
 
@@ -24,6 +29,7 @@ module.exports = {
 
             clearTimeout(reminders.get(message.author.id).timeout);
             reminders.delete(message.author.id);
+            saveReminders(reminders);
             return message.reply("Your reminder has been canceled.");
         }
 
@@ -64,8 +70,14 @@ module.exports = {
         const reminderTimeout = setTimeout(() => {
             message.author.send("Your reminder is now!" + (reminderMessage ? ` You wanted to be reminded to: "${reminderMessage}"` : ''));
             reminders.delete(message.author.id);
+            saveReminders(reminders);
         }, ms);
 
-        reminders.set(message.author.id, { timeout: reminderTimeout, endTime: Date.now() + ms });
+        reminders.set(message.author.id, { 
+            timeout: reminderTimeout, 
+            endTime: Date.now() + ms, 
+            message: reminderMessage 
+        });
+        saveReminders(reminders);
     }
 };

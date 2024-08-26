@@ -1,10 +1,12 @@
 const Discord = require('discord.js');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const path = require('path');
 const { exec } = require('child_process');
 
 const getFiles = require('./lib/getFiles.js');
 const clearDir = require('./lib/clearDir.js');
+const loadReminders = require('./lib/loadReminders.js');
 
 const YT_DLP_PATH = 'yt-dlp.exe';
 
@@ -38,6 +40,7 @@ for (const file of commandFiles) {
 
 client.once('ready', () => {
     console.log('Bot is online!');
+    loadReminders(client); // Load reminders when the bot starts, passing the client
 });
 
 client.on('messageCreate', message => {
