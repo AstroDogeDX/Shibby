@@ -7,14 +7,24 @@ module.exports = {
     name: '!audio',
     execute: async (message, args) => {
         console.info(`[!audio] Info: User "${message.author.username}" invoked command...`);
-        let url = args[0];
-        let isDM = args[1] ? true : false; // New argument to determine if audio should be sent to DM
+        let url = args.shift(); // Remove the first argument (URL)
+        let isDM = false;
+        let additionalContent = '';
 
         if (!url) {
             message.reply('Please provide a valid URL.');
             console.error(`[!audio] Error: No URL provided, command terminated.`);
             return;
         }
+
+        // Check for -dm flag
+        if (args.length > 0 && args[0].toLowerCase() === '-dm') {
+            isDM = true;
+            args.shift(); // Remove the -dm flag
+        }
+
+        // Join remaining args as additional content
+        additionalContent = args.join(' ');
 
         url = url.split('&')[0];
 
@@ -66,8 +76,11 @@ module.exports = {
                     await statusMessage.edit('Uploading audio...');
                     console.info(`[!audio] Info: Uploading audio...`);
 
-                    const sendFunction = isDM ? message.author.send.bind(message.author) : message.channel.send.bind(message.channel); // New part to determine if audio should be sent to DM
-                    sendFunction({ files: [audioName] })
+                    const sendFunction = isDM ? message.author.send.bind(message.author) : message.channel.send.bind(message.channel);
+                    sendFunction({ 
+                        content: additionalContent ? formatMentions(additionalContent) : undefined,
+                        files: [audioName] 
+                    })
                         .then(() => {
                             fs.unlinkSync(audioName);  // Delete the audio file after sending it
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
@@ -77,9 +90,10 @@ module.exports = {
                         .catch(err => {
                             console.error(err);
                             statusMessage.edit('An error occurred while uploading the audio.');
+                            fs.unlinkSync(audioName); // Ensure the file is deleted even if upload fails
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                            console.error(`[!audio] Error: An error occured while uploading the audio. Command terminated.`);
+                            console.error(`[!audio] Error: An error occurred while uploading the audio. Command terminated.`);
                         });
                 });
             });
@@ -90,3 +104,7 @@ module.exports = {
         }
     }
 };
+
+function formatMentions(content) {
+    return content.replace(/<@!?(\d+)>|@(\d+)/g, '<@$1$2>');
+}

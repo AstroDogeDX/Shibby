@@ -3,7 +3,7 @@ const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
-function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM) {
+function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM, additionalContent) {
     const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --cookies-from-browser firefox "${url}"`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
@@ -28,7 +28,10 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM
             sendFunction = message.channel.send.bind(message.channel);
         }
 
-        sendFunction({ files: [videoName] })
+        sendFunction({ 
+            content: additionalContent ? formatMentions(additionalContent) : undefined,
+            files: [videoName] 
+        })
             .then(() => {
                 fs.unlinkSync(videoName);  // Delete the video file after sending it
                 statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
@@ -45,18 +48,32 @@ function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM
     });
 }
 
+function formatMentions(content) {
+    return content.replace(/<@!?(\d+)>|@(\d+)/g, '<@$1$2>');
+}
+
 module.exports = {
     name: '!video',
     execute: async (message, args) => {
         console.info(`[!video] Info: User "${message.author.username}" invoked command...`);
-        let url = args[0];
-        let isDM = args[1] ? true : false;
+        let url = args.shift(); // Remove the first argument (URL)
+        let isDM = false;
+        let additionalContent = '';
 
         if (!url) {
             message.reply('Please provide a valid URL.');
             console.error(`[!video] Error: No URL provided, command terminated.`);
             return;
         }
+
+        // Check for -dm flag
+        if (args.length > 0 && args[0].toLowerCase() === '-dm') {
+            isDM = true;
+            args.shift(); // Remove the -dm flag
+        }
+
+        // Join remaining args as additional content
+        additionalContent = args.join(' ');
 
         // Replace 'x.com' with 'twitter.com'
         url = url.replace('x.com', 'twitter.com');
@@ -91,7 +108,7 @@ module.exports = {
                 const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.${ext}`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM);
+                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM, additionalContent);
             });
         } catch (error) {
             console.error(error);
