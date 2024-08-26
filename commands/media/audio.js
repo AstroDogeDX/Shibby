@@ -7,9 +7,9 @@ module.exports = {
     name: '!audio',
     execute: async (message, args) => {
         console.info(`[!audio] Info: User "${message.author.username}" invoked command...`);
-        let url = args.shift(); // Remove the first argument (URL) from args
+        let url = args.shift(); // Remove the first argument (URL)
         let isDM = false;
-        let customMessage = '';
+        let additionalContent = '';
 
         if (!url) {
             message.reply('Please provide a valid URL.');
@@ -17,37 +17,14 @@ module.exports = {
             return;
         }
 
-        // Check for '-dm' flag
-        if (args.includes('-dm')) {
+        // Check for -dm flag
+        if (args.length > 0 && args[0].toLowerCase() === '-dm') {
             isDM = true;
-            args = args.filter(arg => arg !== '-dm');
+            args.shift(); // Remove the -dm flag
         }
 
-        // Process custom message if not sending to DM
-        if (!isDM && args.length > 0) {
-            customMessage = args.join(' ');
-
-            // Handle user mentions
-            const mentionRegex = /@(\S+)/g;
-            customMessage = await Promise.all(customMessage.split(' ').map(async (word) => {
-                if (mentionRegex.test(word)) {
-                    const username = word.slice(1);
-                    try {
-                        const user = await message.guild.members.fetch({ query: username, limit: 1 });
-                        if (user.first()) {
-                            return `<@${user.first().id}>`;
-                        }
-                    } catch (error) {
-                        console.error(`Error fetching user: ${error}`);
-                    }
-                }
-                return word;
-            }));
-            customMessage = customMessage.join(' ');
-
-            // Sanitize the custom message (excluding user mentions)
-            customMessage = customMessage.replace(/[^a-zA-Z0-9\s<@>]/g, '');
-        }
+        // Join remaining args as additional content
+        additionalContent = args.join(' ');
 
         url = url.split('&')[0];
 
@@ -100,10 +77,9 @@ module.exports = {
                     console.info(`[!audio] Info: Uploading audio...`);
 
                     const sendFunction = isDM ? message.author.send.bind(message.author) : message.channel.send.bind(message.channel);
-                    let messageContent = isDM ? undefined : customMessage;
-                    sendFunction({
-                        content: messageContent,
-                        files: [audioName]
+                    sendFunction({ 
+                        content: additionalContent ? formatMentions(additionalContent) : undefined,
+                        files: [audioName] 
                     })
                         .then(() => {
                             fs.unlinkSync(audioName);  // Delete the audio file after sending it
@@ -117,7 +93,7 @@ module.exports = {
                             fs.unlinkSync(audioName); // Ensure the file is deleted even if upload fails
                             statusMessage.delete().catch(error => console.error(`Couldn't delete status message because of: ${error}`));
                             message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
-                            console.error(`[!audio] Error: An error occured while uploading the audio. Command terminated.`);
+                            console.error(`[!audio] Error: An error occurred while uploading the audio. Command terminated.`);
                         });
                 });
             });
@@ -128,3 +104,7 @@ module.exports = {
         }
     }
 };
+
+function formatMentions(content) {
+    return content.replace(/<@!?(\d+)>|@(\d+)/g, '<@$1$2>');
+}
