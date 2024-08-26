@@ -1,4 +1,4 @@
-# Shibby v0.3.0
+# Shibby v0.3.1
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
@@ -44,5 +44,3 @@
   - `!remind cancel` - Cancel a set reminder if you have one
 
   Example: `!remind 60m Push Update to Shibby`
-
-  Note: Reminders are currently only stored in memory and lost when the bot restarts, which happens frequently. Don't rely on this feature for critical reminders.
