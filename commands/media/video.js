@@ -3,8 +3,9 @@ const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_SIZE = "50M";
 
-function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM, additionalContent) {
-    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --cookies-from-browser firefox "${url}"`;
+function downloadAndUploadVideo(message, videoName, url, statusMessage, sendToDM, additionalContent, clipTimeframe) {
+    let clipParameters = clipTimeframe != null ? `--force-keyframes-at-cuts --download-sections "*${clipTimeframe}"` : "";
+    const command = `${YT_DLP_PATH} -o ${videoName} --no-playlist ${clipParameters} -S "size:${MAX_VIDEO_SIZE}" --merge-output-format mp4 --cookies-from-browser firefox "${url}"`;
 
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
         if (error) {
@@ -52,6 +53,25 @@ function formatMentions(content) {
     return content.replace(/<@!?(\d+)>|@(\d+)/g, '<@$1$2>');
 }
 
+
+function convertTime(timeString) {
+    if(timeString.includes(':')){
+        let allTimes = timeString.split(':');
+        let timeValueInSeconds = 0;
+
+        if(allTimes.length > 3){
+            console.log(`Time is longer than a day, time is invalid`);
+            return NaN;
+        }
+        for(let i = 0; allTimes.length > i; i++){
+            timeValueInSeconds += Number(allTimes[i]) * Math.pow(60, Math.abs(i - (allTimes.length - 1)));
+        } 
+        return timeValueInSeconds;
+    }
+
+    return Number(timeString);
+}
+
 module.exports = {
     name: '!video',
     execute: async (message, args) => {
@@ -59,11 +79,33 @@ module.exports = {
         let url = args.shift(); // Remove the first argument (URL)
         let isDM = false;
         let additionalContent = '';
+        let clipTimeframe = null;
+
 
         if (!url) {
             message.reply('Please provide a valid URL.');
             console.error(`[!video] Error: No URL provided, command terminated.`);
             return;
+        }
+
+        // Gert Clip Parameters
+        if (args.includes('-clip')) {
+            let index = args.indexOf('-clip');
+            if(args.length + 2 > index){
+                let nextElement = args[index+1];
+                let splitParanmeter = nextElement.split('-'); //parsing the input into numbers to ensure that no command line funny business happens
+                if(splitParanmeter.length == 2){
+                    let startTime = convertTime(splitParanmeter[0]);
+                    let endTime = convertTime(splitParanmeter[1]);
+                    if(!isNaN(startTime) && !isNaN(endTime) && startTime < endTime){
+                        clipTimeframe = startTime + "-" + endTime;
+                    }
+                }
+                args.splice(index, 2)
+            }else{
+                args.splice(index, 1)
+            }
+
         }
 
         // Check for -dm flag
@@ -72,7 +114,7 @@ module.exports = {
             args.shift(); // Remove the -dm flag
         }
 
-        // Join remaining args as additional content
+          // Join remaining args as additional content
         additionalContent = args.join(' ');
 
         // Replace 'x.com' with 'twitter.com'
@@ -108,7 +150,7 @@ module.exports = {
                 const videoName = `./temp/${sanitizedTitle.slice(0, 24)}.${ext}`;
 
                 await statusMessage.edit(`Downloading video "${title}" by ${uploader}...`);
-                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM, additionalContent);
+                downloadAndUploadVideo(message, videoName, url, statusMessage, isDM, additionalContent, clipTimeframe);
             });
         } catch (error) {
             console.error(error);

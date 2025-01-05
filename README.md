@@ -7,7 +7,8 @@
 
 📺 **Media Commands**
 - `!audio <url> [-dm] [additional text]` - Fetches audio from the provided URL and reuploads as a `.ogg` file
-- `!video <url> [-dm] [additional text]` - Fetches video from the provided URL and reuploads as a `.mp4` file
+- `!video <url> [-dm] [-clip <start>-<end>] [additional text]` - Fetches video from the provided URL and reuploads as a `.mp4` file
+  - `-clip`: Optional Flag that REQUIRES a parameter afterward determining the start and end of a clip. `start` and `end` are both in seconds (or in timecode e.g. 1:26-3:26) and separated by a `-`
 - `!gif <url> [-dm] [additional text]` - Fetches video from the provided URL and converts to an animated `.gif` (max 20 secs)
 
   For all media commands:
