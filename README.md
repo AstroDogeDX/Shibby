@@ -45,3 +45,13 @@
   - `!remind cancel` - Cancel a set reminder if you have one
 
   Example: `!remind 60m Push Update to Shibby`
+
+- `!notify` - Toggles the 'Ping' role for the user
+  - Adds the role if you don't have it, removes it if you do
+  - Requires the server to have a role named 'Ping' configured
+  - Messages are automatically deleted after 5 seconds
+  
+  Example responses:
+  - "you will now be notified" (role added)
+  - "you will no longer be notified" (role removed)
+  - "the !notify command is not supported here!" (if 'Ping' role doesn't exist)
