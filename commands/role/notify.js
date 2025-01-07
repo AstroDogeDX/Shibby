@@ -7,6 +7,10 @@ module.exports = {
         const pingRole = message.guild.roles.cache.find(role => role.name === 'Ping');
         if (!pingRole) {
             console.error(`[!notify] Error: 'Ping' role not found in server ${message.guild.name}`);
+            message.channel.send(`${message.author}, the !notify command is not supported here!`)
+                .then(msg => {
+                    setTimeout(() => msg.delete(), 5000);
+                });
             message.delete().catch(error => 
                 console.error(`Couldn't delete command message because of: ${error}`)
             );
