@@ -1,4 +1,4 @@
-# Shibby v0.4.3
+# Shibby v0.5.0
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
@@ -19,6 +19,17 @@
   - `!video https://example.com/video.mp4 Check this out @user!`
   - `!audio https://example.com/song.mp3 Great song!`
   - `!gif https://example.com/clip.mp4 -dm Funny moment from the stream`
+
+🎵 **Jukebox Commands**
+- `!jukebox` - Joins your voice channel
+- `!jukebox <url>` - Adds a song from the provided URL to the queue
+- `!jukebox leave` - Makes the bot leave the voice channel
+- `!jukebox stop` - Stops playing and clears the queue
+- `!jukebox skip` - Skips the current song
+- `!jukebox queue` - Shows the current song and queue
+
+  Note: You must be in a voice channel to use jukebox commands.
+  The bot will automatically leave after 5 minutes of inactivity.
 
 🎲 **Random Number Commands**
 - `!roll xdy` - Rolls `x` number of `y`-sided dice
