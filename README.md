@@ -1,4 +1,4 @@
-# Shibby v0.5.0
+# Shibby v0.5.1
 
 🎈 **Fun Commands**
 - `!hello` - Responds with "Hi!"
