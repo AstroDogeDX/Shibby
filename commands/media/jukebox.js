@@ -273,6 +273,9 @@ module.exports = {
                         
                         statusMsg.edit(`Added to queue: ${song.title}`);
                         
+                        // Delete the original command message
+                        message.delete().catch(error => console.error(`Couldn't delete original command message because of: ${error}`));
+                        
                         // If nothing is playing, start playing
                         if (!queue.currentSong) {
                             playSong(queue);
