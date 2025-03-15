@@ -61,6 +61,10 @@
   - Adds the role if you don't have it, removes it if you do
   - Requires the server to have a role named 'Ping' configured
   - Messages are automatically deleted after 5 seconds
+    
+- `!nsfw' - Toggles the 'NSFW' role for the user
+  - Adds the role if you don't have it, removes it if you do
+  - Requires the server to have a role named 'NSFW' configured
   
   Example responses:
   - "you will now be notified" (role added)
