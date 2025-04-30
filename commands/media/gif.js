@@ -3,13 +3,17 @@ const fs = require('fs');
 const YT_DLP_PATH = 'yt-dlp.exe';
 const MAX_VIDEO_DURATION = 20; // 20 seconds
 
-async function downloadAndConvertToGif(message, videoName, url, statusMessage, sendToDM, additionalContent) {
+async function downloadAndConvertToGif(message, videoName, url, statusMessage, sendToDM, additionalContent, titleInfo) {
     // Download and convert to GIF using yt-dlp
-    const downloadCommand = `${YT_DLP_PATH} -o ${videoName}.mp4 --no-playlist --sponsorblock-remove sponsor,music_offtopic,outro --cookies-from-browser firefox "${url}" && ffmpeg -i ${videoName}.mp4 -vf "fps=30,scale=-1:500:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v gif -f gif ${videoName}.gif`;
+    const downloadCommand = `${YT_DLP_PATH} -o ${videoName}.mp4 --no-playlist --sponsorblock-remove sponsor,music_offtopic,outro "${url}" && ffmpeg -i ${videoName}.mp4 -vf "fps=30,scale=-1:500:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v gif -f gif ${videoName}.gif`;
     exec(downloadCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
-            statusMessage.edit('An error occurred while downloading and converting the video to GIF.');
+            if (stderr.includes("Unable to download webpage")) {
+                statusMessage.edit('Unable to access the video. The URL might be invalid or require authentication.');
+            } else {
+                statusMessage.edit('An error occurred while downloading and converting the video to GIF.');
+            }
             fs.unlinkSync(videoName + '.mp4'); // Delete the original MP4 file
             return;
         }
@@ -33,8 +37,10 @@ async function downloadAndConvertToGif(message, videoName, url, statusMessage, s
                 sendFunction = message.channel.send.bind(message.channel);
             }
 
+            const formattedMessage = `${additionalContent ? additionalContent + '\n' : ''}-# ${titleInfo}, requested by ${message.author.username}`;
+
             sendFunction({ 
-                content: additionalContent ? formatMentions(additionalContent) : undefined,
+                content: formattedMessage,
                 files: [videoName + '.gif'] 
             })
                 .then(() => {
@@ -85,36 +91,23 @@ module.exports = {
 
         // Replace 'x.com' with 'twitter.com'
         url = url.replace('x.com', 'twitter.com');
-        
-        url = url.split('&')[0]; // Strips out additional URL parameters for simplicity
+        url = url.split('&')[0];
 
         try {
-            const statusMessage = await message.reply('Fetching video details...');
-            console.log(`[!gif] Info: Fetching URL details...`);
+            const statusMessage = await message.reply('Downloading and converting video...');
+            console.log(`[!gif] Info: Starting download and conversion...`);
 
-            // Extract video title for the filename
-            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download --cookies-from-browser firefox "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            // First get title and uploader info
+            exec(`${YT_DLP_PATH} --print "%(title)s - %(uploader)s" --no-playlist "${url}"`, async (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`exec error: ${error}`);
+                    console.error(`Metadata error: ${error}`);
                     statusMessage.edit('An error occurred while fetching video details.');
                     return;
                 }
 
-                let videoData, title, ext;
-                try {
-                    videoData = JSON.parse(stdout);
-                    title = videoData.title;
-                    ext = videoData.ext;
-                } catch (parseError) {
-                    console.error('Error parsing JSON:', parseError);
-                    title = `${message.author.id}_${Date.now()}`;
-                }
-
-                const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const videoName = `./temp/${sanitizedTitle.slice(0, 24)}`; // Saving as .mp4 for downloading
-
-                await statusMessage.edit(`Downloading and converting video "${title}"...`);
-                downloadAndConvertToGif(message, videoName, url, statusMessage, isDM, additionalContent);
+                const titleInfo = stdout.trim() || 'Unknown - Unknown';
+                const videoName = `./temp/${message.author.id}_${Date.now()}`;
+                downloadAndConvertToGif(message, videoName, url, statusMessage, isDM, additionalContent, titleInfo);
             });
         } catch (error) {
             console.error(error);

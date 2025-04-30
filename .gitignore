@@ -25,3 +25,5 @@ ffplay.exe
 ffprobe.exe
 commands/eggs/
 reminders.json
+cookies.txt
+yt-dlp-plugins/

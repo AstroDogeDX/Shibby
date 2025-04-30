@@ -29,43 +29,34 @@ module.exports = {
         url = url.split('&')[0];
 
         try {
-            const statusMessage = await message.reply('Fetching URL details...');
-            console.info(`[!audio] Info: Fetching URL details...`);
+            const statusMessage = await message.reply('Downloading audio...');
+            console.info(`[!audio] Info: Starting download...`);
 
-            // Get title and uploader using yt-dlp
-            exec(`${YT_DLP_PATH} -j --no-playlist --skip-download --cookies-from-browser firefox "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (error, stdout, stderr) => {
+            // First get title and uploader info
+            exec(`${YT_DLP_PATH} --print "%(title)s - %(uploader)s" --no-playlist "${url}"`, async (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`exec error: ${error}`);
-                    statusMessage.edit('An error occurred while fetching URL details.');
-                    console.error(`[!audio] Error: An error occured while fetching URL details. Command terminated.`);
+                    console.error(`Metadata error: ${error}`);
+                    statusMessage.edit('An error occurred while fetching audio details.');
                     return;
                 }
 
-                let title, uploader;
-                try {
-                    const audioData = JSON.parse(stdout);
-                    title = audioData.title;
-                    uploader = audioData.uploader;
-                } catch (parseError) {
-                    console.error('Error parsing JSON:', parseError);
-                    console.warn(`[!audio] Warn: An error occured while parsing JSON, using fallback.`);
-                    title = `${message.author.id}_${Date.now()}`;
-                    uploader = 'Unknown';
-                }
+                const titleInfo = stdout.trim() || 'Unknown - Unknown';
+                const formattedMessage = `${additionalContent ? additionalContent + '\n' : ''}-# ${titleInfo}, requested by ${message.author.username}`;
 
-                const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitizing the title to make it file-safe
-                const audioName = `./temp/${sanitizedTitle.slice(0, 24)}.ogg`; // Changed extension to .ogg
+                const audioName = `./temp/${message.author.id}_${Date.now()}.ogg`;
 
-                await statusMessage.edit(`Downloading audio from "${title}" by ${uploader}...`);
-                console.info(`[!audio] Info: Downloading audio: ${title} - ${uploader}`);
-
-                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=ogg]/bestaudio/best" --no-playlist --audio-format vorbis --cookies-from-browser firefox "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
+                exec(`${YT_DLP_PATH} -o ${audioName} -f "bestaudio[ext=ogg]/bestaudio/best" --no-playlist --audio-format vorbis "${url}"`, { maxBuffer: 10 * 1024 * 1024 }, async (err, stdout, stderr) => {
                     if (err) {
                         console.error(`exec error: ${err}`);
-                        statusMessage.edit('An error occurred while downloading the audio.');
-                        console.error(`[!audio] Error: An error occured while downloading the audio. Command terminated.`);
+                        if (stderr.includes("Unable to download webpage")) {
+                            statusMessage.edit('Unable to access the audio. The URL might be invalid or require authentication.');
+                        } else {
+                            statusMessage.edit('An error occurred while downloading the audio.');
+                        }
+                        console.error(`[!audio] Error: An error occurred while downloading the audio. Command terminated.`);
                         return;
                     }
+
                     const audioSize = fs.statSync(audioName).size;
                     if (audioSize > MAX_AUDIO_SIZE_BYTES) {
                         statusMessage.edit('The audio is too large to upload to Discord. Please select a shorter audio.');
@@ -73,12 +64,13 @@ module.exports = {
                         fs.unlinkSync(audioName);  // Delete the audio file since it's too large
                         return;
                     }
+
                     await statusMessage.edit('Uploading audio...');
                     console.info(`[!audio] Info: Uploading audio...`);
 
                     const sendFunction = isDM ? message.author.send.bind(message.author) : message.channel.send.bind(message.channel);
                     sendFunction({ 
-                        content: additionalContent ? formatMentions(additionalContent) : undefined,
+                        content: formattedMessage,
                         files: [audioName] 
                     })
                         .then(() => {

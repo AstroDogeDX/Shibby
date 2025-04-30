@@ -112,50 +112,46 @@ async function downloadSong(url, message) {
     const fileName = path.join(tempDir, `juke-${message.author.id}_${Date.now()}.mp3`);
     
     return new Promise((resolve, reject) => {
-        // First get metadata
-        exec(`${YT_DLP_PATH} --dump-json ${url}`, async (error, stdout, stderr) => {
-            if (error || stderr) {
-                console.error(`Metadata error: ${error || stderr}`);
+        // First get title and uploader using --print with template variables
+        const metadataCommand = `${YT_DLP_PATH} --print "%(title)s - %(uploader)s" --no-playlist "${url}"`;
+        exec(metadataCommand, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Metadata error: ${error}`);
                 reject(new Error('Failed to fetch video metadata'));
                 return;
             }
 
-            try {
-                const metadata = JSON.parse(stdout);
-                const songTitle = `${metadata.title} - ${metadata.uploader}`;
+            // The output is already in the format we want
+            const songTitle = stdout.trim() || 'Unknown - Unknown';
 
-                // Download the audio
-                const downloadProcess = exec(`${YT_DLP_PATH} --no-playlist -x --audio-format mp3 -o "${fileName}" ${url}`);
-                
-                // Wait for the download to complete
-                downloadProcess.on('close', (code) => {
-                    if (code !== 0) {
-                        reject(new Error('Failed to download audio'));
+            // Download the audio
+            const downloadProcess = exec(`${YT_DLP_PATH} --no-playlist -x --audio-format mp3 -o "${fileName}" "${url}"`);
+            
+            // Wait for the download to complete
+            downloadProcess.on('close', (code) => {
+                if (code !== 0) {
+                    reject(new Error('Failed to download audio'));
+                    return;
+                }
+
+                // Add a small delay to ensure the file is fully written
+                setTimeout(() => {
+                    // Verify the file exists before resolving
+                    if (!fs.existsSync(fileName)) {
+                        reject(new Error('Downloaded file not found'));
                         return;
                     }
 
-                    // Add a small delay to ensure the file is fully written
-                    setTimeout(() => {
-                        // Verify the file exists before resolving
-                        if (!fs.existsSync(fileName)) {
-                            reject(new Error('Downloaded file not found'));
-                            return;
-                        }
+                    resolve({
+                        title: songTitle,
+                        file: fileName
+                    });
+                }, 1000); // 1 second delay
+            });
 
-                        resolve({
-                            title: songTitle,
-                            file: fileName
-                        });
-                    }, 1000); // 1 second delay
-                });
-
-                downloadProcess.stderr.on('data', (data) => {
-                    console.error(`Download stderr: ${data}`);
-                });
-            } catch (error) {
-                console.error(`JSON parse error: ${error}`);
-                reject(error);
-            }
+            downloadProcess.stderr.on('data', (data) => {
+                console.error(`Download stderr: ${data}`);
+            });
         });
     });
 }
